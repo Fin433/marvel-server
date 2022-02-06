@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { useState, useEffect } from "react";
 import "./charInfo.scss";
 import MarvelService from "../../services/MarvelService";
 import PropTypes from "prop-types";
@@ -7,67 +7,46 @@ import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/errorMessage";
 import Skeleton from "../skeleton/Skeleton";
 
-class CharInfo extends Component {
-	state = {
-		char: null,
-		loading: false,
-		error: false
-	};
-
-	marvelService = new MarvelService();
-
-	componentDidMount() {
-		this.updateChar()
-	}
-
-	componentDidUpdate(prevProps/* , prevState */) {
-		if (this.props.charId !== prevProps.charId) { /* очень частая ошибка новичков - не проверка на предыдущие пропсы */
-			this.updateChar();
-		}
-	}
-// // предохранители это классовые компоненты которые оборачивают дргуие компоненты и если в их дочерних компонентах будет ошибка то предорхранители будут ее ловить
-// 	componentDidCatch(err, info) {
-// 		console.error(err, info);
-// 		this.setState({error: true});
-// 	}
+const CharInfo = (props) => {
+	const [char, setChar] = useState(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState(false);
 
 
-	updateChar = () => {
-		const {charId} = this.props;
+	const marvelService = new MarvelService();
+
+	useEffect(() => {
+		updateChar()
+	}, [props.charId])
+
+	const updateChar = () => {
+		const {charId} = props;
 		if (!charId) {
 			return
 		}
-		this.onCharLoading();
-		this.marvelService
+		onCharLoading();
+		marvelService
 			.getCharacter(charId)
-			.then(this.onCharLoaded)
-			.catch(this.onError);
+			.then(onCharLoaded)
+			.catch(onError);
 		// errorBoundary
 		// this.foo.bar = 0
 	}
 
-	onCharLoaded = (char) => {
-		this.setState({
-			char,
-			loading: false
-		})
+	const onCharLoaded = (char) => {
+		setLoading(false);
+		setChar(char);
 	}
 
-	onCharLoading = () => {
-		this.setState({
-				loading: true
-		})
+	const onCharLoading = () => {
+		setLoading(true);
 }
 
-	onError = () => {
-		this.setState({
-			loading: false,
-			error: true
-		})
+	const onError = () => {
+		setError(true);
+		setLoading(false)
 	}
 
-	render() {
-		const {char, loading, error} = this.state;
 		const skeleton = char || loading || error ? null : <Skeleton/>;
 		const errorMessage = error ? <ErrorMessage/> : null;
 		const spinner = loading ? <Spinner/> : null;
@@ -80,7 +59,6 @@ class CharInfo extends Component {
 				{content}
 			</div>
 		);
-	}
 }
 
 const View = ({char}) => {
